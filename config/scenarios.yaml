@@ -1,0 +1,44 @@
+# ============================================================================
+# scenarios.yaml
+# Notebook-aligned attack scenario definitions for the Improved
+# CSE-CIC-IDS-2018 dataset (Liu et al., 2022, WTMC).
+#
+# REVISION SCOPE:
+#   S1 (SSH-BruteForce), S2 (DDoS-HOIC)
+#   main proof-of-concept evaluation on one public dataset.
+# ============================================================================
+
+scenarios:
+
+  # --------------------------------------------------------------------------
+  # MAIN EVALUATION SCENARIOS
+  # --------------------------------------------------------------------------
+  - id: "S1"
+    name: "SSH-BruteForce"
+    active: true
+    cic_labels: ["SSH-BruteForce"]
+    targets: ["172.31.69.25"]                  # confirmed from data
+    mitre_tactic: "Credential Access"
+    mitre_technique: "T1110.001"
+    capec: "CAPEC-49"
+    cwe: "CWE-307"
+    representative_cve: "CVE-2021-22530"
+    cvss_proxy: 9.9
+    description: |
+      SSH credential-guessing against the SSH service of the internal
+      server 172.31.69.25.
+
+  - id: "S2"
+    name: "DDoS-HOIC"
+    active: true
+    cic_labels: ["DDoS-HOIC"]
+    targets: ["172.31.69.28"]                  # confirmed from data
+    mitre_tactic: "Impact"
+    mitre_technique: "T1498.001"
+    capec: "CAPEC-488"
+    cwe: "CWE-770"
+    representative_cve: "CVE-2023-43632"
+    cvss_proxy: 9.9
+    description: |
+      Volumetric denial-of-service against an externally facing web
+      service on 172.31.69.28.

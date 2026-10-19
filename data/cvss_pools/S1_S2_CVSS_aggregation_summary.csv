@@ -1,0 +1,7 @@
+Scenario,Dataset Label,CWE,Method,CVSS Pool Size,Aggregated CVSS,V(S)
+S1,SSH-BruteForce,CWE-307,max,325,9.9,0.99
+S1,SSH-BruteForce,CWE-307,mean,325,7.996,0.7996
+S1,SSH-BruteForce,CWE-307,median,325,8.1,0.81
+S2,DDoS-HOIC,CWE-770,max,964,9.9,0.99
+S2,DDoS-HOIC,CWE-770,mean,964,6.7368,0.6737
+S2,DDoS-HOIC,CWE-770,median,964,7.1,0.71

@@ -1,0 +1,178 @@
+# ============================================================================
+# default.yaml
+# All hyperparameters consolidated here (manuscript Appendix A1).
+#
+# Dataset:  Improved CSE-CIC-IDS-2018  (Liu et al., 2022, WTMC).
+#           https://intrusion-detection.distrinet-research.be/CNS2022/CSECICIDS2018.html
+# ============================================================================
+
+dataset:
+  version: "improved_cse_cic_ids_2018"
+  citation: "Liu et al., 2022 (WTMC) - Error Prevalence in NIDS datasets"
+  url: "https://intrusion-detection.distrinet-research.be/CNS2022/CSECICIDS2018.html"
+
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  data_mappings: "data/mappings"
+  results: "results"
+
+  cwe_csv: "data/mappings/cwe.csv"
+  cvss_csv: "data/mappings/cvss.csv"
+  d3fend_csv: "data/mappings/d3fend.csv"
+
+# ----------------------------------------------------------------------------
+# Preprocessing
+# ----------------------------------------------------------------------------
+preprocessing:
+  benign_label: "BENIGN"                      # Improved dataset uses uppercase
+  drop_duplicates: true
+  drop_na_subset: ["Src IP", "Dst IP", "Label"]
+
+  # Improved-dataset specific: drop "*-Attempted" labels (failed/no-payload).
+  # The slimmed file All_Combined_no_Attempted.csv has these already removed,
+  # so this flag is effectively a no-op there but harmless to leave on.
+  exclude_attempted: true
+  attempted_suffix: "-Attempted"
+  internal_networks: ["172.31.0.0/16"]
+
+  # Notebook cell [27]: keep only RFC1918 internal-internal benign flows
+  # for G_normal construction.
+  internal_only: true
+
+  # Multi-hop augmentation: expensive on large datasets and unnecessary
+  # when the natural flow density is already high. OFF by default.
+  augmentation:
+    enabled: false
+    max_hops: 3
+    time_window_seconds: 60
+
+# ----------------------------------------------------------------------------
+# Graph construction (notebook cells [28]-[30])
+# ----------------------------------------------------------------------------
+graph:
+  # MIN_EDGE_COUNT in the notebook. The notebook used 3 (matching the
+  # "stable backbone threshold" claim in Sec. III.B of the manuscript).
+  edge_threshold_tau: 3
+
+  # Original manuscript comparison setting: tau-filtered internal graph.
+  use_backbone: false
+  node_budget: 100000               # large -> let MIN_EDGE_COUNT decide size
+  max_hops: 4
+  backbone_seed_subnet_prefix: false
+
+  # K-hop impact range (notebook K = 3).
+  impact_range_K: 3
+
+  # Keep the weakly connected component containing the scenario target(s).
+  keep_target_wcc: true
+
+# ----------------------------------------------------------------------------
+# Centrality (asset importance I(n))
+# ----------------------------------------------------------------------------
+centrality:
+  method: "pagerank"        # pagerank, degree, betweenness, weighted_frequency
+  pagerank:
+    damping: 0.85
+    max_iter: 100
+    tol: 1.0e-6
+    weight_transform: "none"
+  normalize: "log1p_minmax"
+
+# ----------------------------------------------------------------------------
+# Exposure ER(n) (notebook cell [35])
+# ----------------------------------------------------------------------------
+exposure:
+  method: "internal_indegree_plus_external_sources"
+  normalize: "log1p_minmax"
+  flow_scope: "benign_internal_destination"
+
+# ----------------------------------------------------------------------------
+# Vulnerability V(s) and risk
+# ----------------------------------------------------------------------------
+risk:
+  # CVSS aggregation strategy: max | mean | median
+  cvss_aggregation: "max"
+  cvss_normalizer: 10.0
+  # Use the per-scenario cvss_proxy (notebook LABEL_CVSS) instead of
+  # CWE-pool aggregation when available. Set false to fall back to the
+  # CWE pool from cvss.csv.
+  use_scenario_cvss_proxy: true
+
+# ----------------------------------------------------------------------------
+# Countermeasure tiers and difficulty (notebook-aligned, manuscript Sec. IV)
+# ----------------------------------------------------------------------------
+countermeasure:
+  effectiveness_tiers:
+    high:
+      r_min: 0.05
+      r_max: 0.25
+      r_default: 0.15
+    medium:
+      r_min: 0.30
+      r_max: 0.50
+      r_default: 0.40
+    low:
+      r_min: 0.50
+      r_max: 0.80
+      r_default: 0.65
+
+  difficulty:
+    components: ["manpower", "technology", "cost"]
+    min_value: 0
+
+score:
+  difficulty_denominator_offset: 1.0
+
+# ----------------------------------------------------------------------------
+# Sensitivity grids (exp05, exp06)
+# ----------------------------------------------------------------------------
+sensitivity:
+  graph:
+    edge_threshold_tau: [1, 2, 3, 5, 10]   # Table 14
+    impact_range_K: [1, 2, 3, 4]           # Table 5
+  residual:
+    grid_points: 5        # rr values per tier -> 5^4 = 625 combinations (Table 12)
+
+# ----------------------------------------------------------------------------
+# Experiment defaults used in the published paper
+# ----------------------------------------------------------------------------
+evaluation:
+  main_scenarios: ["S1", "S2"]
+
+  centrality_ablation:              # exp16, Table 13
+    methods: ["pagerank", "degree", "betweenness"]
+    top_k: 10
+
+  cvss_sensitivity:                 # exp15, Table 11
+    scenarios: ["S1", "S2"]
+    methods: ["max", "mean", "median"]
+    source: "NVD CWE pool with manuscript CVSS fallback order"
+
+# ----------------------------------------------------------------------------
+# MTTA (exp12, Table 15)
+# ----------------------------------------------------------------------------
+mtta:
+  measurement:
+    n_runs: 50
+    warmup: 5
+    timer: "time.perf_counter"
+    scope: |
+      CSV loading and preprocessing are excluded. Timing includes graph
+      construction, PageRank importance, cached inbound-source exposure,
+      V(S), K-hop impact range, Loss, countermeasure scoring, and best
+      selection. Wall-clock values depend on hardware.
+
+  baselines:
+    - name: "manual_analysis"
+      seconds: 300
+      source: "Ahn et al., IEEE Access, vol. 12, pp. 89291-89309, 2024, doi:10.1109/ACCESS.2024.3417182 (paper ref. [22])"
+      relevance: "manual-analysis proxy (~5 min average fault detection time for public-institution information systems)"
+      tier: "manual"
+
+# ----------------------------------------------------------------------------
+# Reproducibility
+# ----------------------------------------------------------------------------
+seed: 42
+random_state: 42
+log_level: "INFO"

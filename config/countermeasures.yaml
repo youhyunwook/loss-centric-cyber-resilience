@@ -1,0 +1,101 @@
+# S1/S2 countermeasure definitions for the revised main evaluation.
+
+scenario_countermeasures:
+
+  S1:
+    - cid: "MFA"
+      name: "MFA Deployment"
+      d3fend: "D3-MFA"
+      tier: "high"
+      op: "SCALE_V"
+      params: {V_scale: 0.15}
+      intervention_type: "V"
+      M: 0
+      T: 1
+      C: 0
+      rubric_note: "V residual ratio rr=0.15."
+
+    - cid: "SSH_KEY"
+      name: "SSH Key Authentication"
+      d3fend: "D3-CH"
+      tier: "high"
+      op: "SCALE_V"
+      params: {V_scale: 0.10}
+      intervention_type: "V"
+      M: 0
+      T: 1
+      C: 0
+      rubric_note: "V residual ratio rr=0.10."
+
+    - cid: "ACCT_LOCKOUT"
+      name: "Account Lockout Policy"
+      d3fend: "D3-AL"
+      tier: "medium"
+      op: "SCALE_E_KHOP"
+      params: {E_scale: 0.40, khop: 1}
+      intervention_type: "E"
+      M: 0
+      T: 0
+      C: 0
+      rubric_note: "E residual ratio rr=0.40 on R(t,K) intersect N1(t)."
+
+    - cid: "NETWORK_ACL"
+      name: "Network ACL"
+      d3fend: "D3-ITF"
+      tier: "medium"
+      op: "SCALE_E_KHOP"
+      params: {E_scale: 0.40, khop: 1}
+      intervention_type: "E"
+      M: 0
+      T: 1
+      C: 0
+      rubric_note: "E residual ratio rr=0.40 on R(t,K) intersect N1(t)."
+
+  S2:
+    - cid: "RATE_LIMIT"
+      name: "Rate Limiting"
+      d3fend: "D3-ISVA"
+      tier: "medium"
+      op: "SCALE_E_KHOP"
+      params: {E_scale: 0.40, khop: 1}
+      intervention_type: "E"
+      M: 0
+      T: 0
+      C: 0
+      rubric_note: "E residual ratio rr=0.40 on R(t,K) intersect N1(t)."
+
+    - cid: "DDOS_SCRUB"
+      name: "DDoS Scrubbing"
+      d3fend: "D3-NTF"
+      tier: "high"
+      op: "SCALE_E_KHOP"
+      params: {E_scale: 0.10, khop: 1}
+      intervention_type: "E"
+      M: 1
+      T: 1
+      C: 1
+      rubric_note: "E residual ratio rr=0.10 on R(t,K) intersect N1(t)."
+
+    - cid: "CDN_LB"
+      name: "CDN/Load Balancer"
+      d3fend: "D3-BDI"
+      tier: "medium"
+      op: "SCALE_I_TARGET"
+      params: {I_scale: 0.35}
+      intervention_type: "I"
+      M: 0
+      T: 1
+      C: 1
+      rubric_note: "I residual ratio rr=0.35 on target."
+
+    - cid: "BLACKHOLE"
+      name: "Blackhole Routing"
+      d3fend: "D3-NI"
+      tier: "high"
+      op: "SCALE_E_KHOP"
+      params: {E_scale: 0.20, khop: 1}
+      intervention_type: "E"
+      M: 0
+      T: 1
+      C: 0
+      rubric_note: "E residual ratio rr=0.20 on R(t,K) intersect N1(t)."
